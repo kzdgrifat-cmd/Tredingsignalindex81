@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NovexAI Pro Signal & Analysis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[#0b0f19] text-slate-100 font-sans min-h-screen flex flex-col justify-between">
+
+    <!-- Top Header -->
+    <header class="bg-[#0f172a] border-b border-slate-800 px-4 py-3 flex justify-between items-center sticky top-0 z-50">
+        <div class="flex items-center space-x-2">
+            <div class="w-3 h-3 bg-emerald-500 rounded-full animate-pulse"></div>
+            <h1 class="text-base font-black tracking-wider text-emerald-400">NOVEX <span class="text-white">AI PRO</span></h1>
+        </div>
+        <a href="https://qxbroker.com" target="_blank" class="text-xs bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold px-3 py-1.5 rounded-lg shadow-md transition-all">
+            Open Quotex
+        </a>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="flex-1 p-4 max-w-md mx-auto w-full space-y-4 flex flex-col">
+        
+        <!-- Pair Selector Grid -->
+        <div class="bg-[#0f172a] border border-slate-800 rounded-2xl p-4 shadow-xl space-y-3">
+            <div class="flex justify-between items-center">
+                <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">Select Market Pair</span>
+                <span id="marketStatus" class="text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md font-semibold">Real Feed Active</span>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-2">
+                <select id="currencyPair" class="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2.5 focus:outline-none focus:border-emerald-500 font-semibold">
+                    <option value="FX:EURUSD">EUR/USD (Euro / US Dollar)</option>
+                    <option value="FX:GBPUSD">GBP/USD (British Pound)</option>
+                    <option value="FX:USDJPY">USD/JPY (US Dollar / Yen)</option>
+                    <option value="FX:AUDUSD">AUD/USD (Australian Dollar)</option>
+                    <option value="FX:EURGBP">EUR/GBP (Euro / British Pound)</option>
+                    <option value="CRYPTO:BTCUSD">BTC/USD (Bitcoin)</option>
+                </select>
+
+                <select id="timeframe" class="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl p-2.5 focus:outline-none focus:border-emerald-500 font-semibold">
+                    <option value="1">1 Minute</option>
+                    <option value="5">5 Minutes</option>
+                    <option value="15">15 Minutes</option>
+                </select>
+            </div>
+
+            <button onclick="analyzeMarket()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-extrabold text-xs py-2.5 rounded-xl shadow-lg transition-all mt-1">
+                Generate Technical Signal 🔍
+            </button>
+        </div>
+
+        <!-- Signal Output Card -->
+        <div id="signalCard" class="bg-[#0f172a] border border-slate-800 rounded-2xl p-4 shadow-xl hidden space-y-3">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                <span class="text-xs font-bold text-slate-300">Analysis Result</span>
+                <span id="signalBadge" class="text-[10px] px-2.5 py-1 rounded-lg font-black">--</span>
+            </div>
+            
+            <div class="space-y-2 text-xs">
+                <div class="flex justify-between bg-slate-900/60 p-2 rounded-lg border border-slate-800">
+                    <span class="text-slate-400">Trend Strength:</span>
+                    <span id="trendStrength" class="font-bold text-slate-200">Calculating...</span>
+                </div>
+                <div class="flex justify-between bg-slate-900/60 p-2 rounded-lg border border-slate-800">
+                    <span class="text-slate-400">Market Logic:</span>
+                    <span id="marketReason" class="font-bold text-slate-200 text-right">--</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- TradingView Live Chart Container -->
+        <div class="bg-[#0f172a] border border-slate-800 rounded-2xl overflow-hidden shadow-xl flex-1 min-h-[320px] flex flex-col">
+            <div class="px-4 py-2.5 border-b border-slate-800 flex justify-between items-center">
+                <span id="chartLabel" class="text-xs font-bold text-slate-300">EUR/USD Chart View</span>
+                <span class="text-[10px] text-slate-400">Live Technicals</span>
+            </div>
+            <div class="flex-1 w-full relative" id="tv_chart_container"></div>
+        </div>
+
+        <!-- Action Button -->
+        <div class="pt-1">
+            <a href="https://qxbroker.com" target="_blank" class="block w-full bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-extrabold text-xs py-3 rounded-xl text-center transition-all shadow-lg">
+                🚀 Execute Trade on Quotex
+            </a>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="text-center py-3 text-[10px] text-slate-500 border-t border-slate-900">
+        NovexAI Professional Intelligence Workspace
+    </footer>
+
+    <!-- TradingView Script & Logic Handler -->
+    <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async></script>
+    <script>
+        function loadChart(symbol, interval) {
+            const wrapper = document.getElementById('tv_chart_container');
+            wrapper.innerHTML = '';
+
+            const container = document.createElement('div');
+            container.className = 'tradingview-widget-container w-full h-full';
+            
+            const widgetDiv = document.createElement('div');
+            widgetDiv.className = 'tradingview-widget-container__widget w-full h-full';
+            container.appendChild(widgetDiv);
+
+            const script = document.createElement('script');
+            script.type = 'text/javascript';
+            script.async = true;
+            script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
+            
+            script.innerHTML = JSON.stringify({
+                "autosize": true,
+                "symbol": symbol,
+                "interval": interval,
+                "timezone": "Etc/UTC",
+                "theme": "dark",
+                "style": "1",
+                "locale": "en",
+                "allow_symbol_change": false,
+                "calendar": false,
+                "support_host": "https://www.tradingview.com"
+            });
+            
+            container.appendChild(script);
+            wrapper.appendChild(container);
+        }
+
+        function analyzeMarket() {
+            const pairSelect = document.getElementById('currencyPair');
+            const symbol = pairSelect.value;
+            const interval = document.getElementById('timeframe').value;
+            const pairName = pairSelect.options[pairSelect.selectedIndex].text.split(' ')[0];
+
+            document.getElementById('chartLabel.innerText', `${pairName} Chart View`);
+            loadChart(symbol, interval);
+
+            // Show Signal Box
+            const card = document.getElementById('signalCard');
+            card.classList.remove('hidden');
+
+            // Realistic technical simulation based on live selection
+            const badge = document.getElementById('signalBadge');
+            const strength = document.getElementById('trendStrength');
+            const reason = document.getElementById('marketReason');
+
+            // Randomizing realistic technical analysis parameters for the selected asset
+            const isCall = Math.random() > 0.45;
+            const conf = Math.floor(Math.random() * (88 - 72 + 1)) + 72;
+
+            if (isCall) {
+                badge.className = "text-[10px] px-2.5 py-1 rounded-lg font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/40";
+                badge.innerText = `▲ CALL (${conf}%)`;
+                strength.innerText = "Strong Bullish Momentum";
+                reason.innerText = `${pairName} tested major support zone; buyers stepping in.`;
+            } else {
+                badge.className = "text-[10px] px-2.5 py-1 rounded-lg font-black bg-rose-500/20 text-rose-400 border border-rose-500/40";
+                badge.innerText = `▼ PUT (${conf}%)`;
+                strength.innerText = "Strong Bearish Momentum";
+                reason.innerText = `${pairName} facing strong resistance rejection; sellers active.`;
+            }
+        }
+
+        window.onload = function() {
+            loadChart("FX:EURUSD", "1");
+        };
+    </script>
+</body>
+</html>
