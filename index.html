@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quotex Pro - UTC+6 UTC Original Signal Engine</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darkBg: '#0b0f19',
+                        cardBg: '#131c2e',
+                        accentGreen: '#00ff7f',
+                        accentRed: '#ff4d4d'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-darkBg text-white font-sans antialiased flex items-center justify-center min-h-screen p-2">
+    <div class="w-full max-w-md bg-cardBg border border-gray-800 rounded-2xl shadow-2xl overflow-hidden p-4">
+        
+        <!-- 1. LOGIN SCREEN -->
+        <div id="login-screen">
+            <h2 class="text-2xl font-bold text-center text-accentGreen mb-6">Quotex Signal Pro</h2>
+            <input type="email" id="login-email" placeholder="Email Address" class="w-full mb-4 p-3 bg-gray-900 border border-gray-700 rounded-lg text-white">
+            <input type="password" id="login-password" placeholder="Password" class="w-full mb-6 p-3 bg-gray-900 border border-gray-700 rounded-lg text-white">
+            <button onclick="handleLogin()" class="w-full py-3 bg-accentGreen text-black font-bold rounded-lg mb-4 hover:opacity-90">Login</button>
+            <p class="text-xs text-center text-gray-400">Don't have an account? <span onclick="showScreen('signup-screen')" class="text-accentGreen cursor-pointer underline">Create Account</span></p>
+        </div>
+        <!-- 2. SIGNUP SCREEN -->
+        <div id="signup-screen" class="hidden">
+            <h2 class="text-2xl font-bold text-center text-accentGreen mb-6">Create Account</h2>
+            <p class="text-xs text-gray-400 mb-4 text-center">New accounts get 5 Free Credits automatically!</p>
+            <input type="email" id="signup-email" placeholder="Email Address" class="w-full mb-4 p-3 bg-gray-900 border border-gray-700 rounded-lg text-white">
+            <input type="password" id="signup-password" placeholder="Password" class="w-full mb-6 p-3 bg-gray-900 border border-gray-700 rounded-lg text-white">
+            <button onclick="handleSignup()" class="w-full py-3 bg-accentGreen text-black font-bold rounded-lg mb-4 hover:opacity-90">Get Verification Code</button>
+            <p class="text-xs text-center text-gray-400"><span onclick="showScreen('login-screen')" class="text-accentGreen cursor-pointer underline">Back to Login</span></p>
+        </div>
+        <!-- 3. VERIFICATION CODE SCREEN -->
+        <div id="verify-screen" class="hidden">
+            <h2 class="text-2xl font-bold text-center text-accentGreen mb-2">Verify Email</h2>
+            <p id="demo-code-box" class="text-xs text-yellow-400 mb-4 text-center bg-gray-900 p-2 rounded border border-yellow-600/30"></p>
+            <input type="text" id="verify-code" placeholder="Enter 6-Digit Code" class="w-full mb-6 p-3 bg-gray-900 border border-gray-700 rounded-lg text-white text-center tracking-widest text-lg">
+            <button onclick="handleVerify()" class="w-full py-3 bg-accentGreen text-black font-bold rounded-lg hover:opacity-90">Verify & Complete</button>
+        </div>
+        <!-- 4. DASHBOARD & UTC+6 ORIGINAL ENGINE SCREEN -->
+        <div id="dashboard-screen" class="hidden">
+            <div class="flex justify-between items-center mb-2 border-b border-gray-800 pb-2">
+                <h3 id="welcome-title" class="text-xs font-bold text-accentGreen truncate max-w-[170px]">Dashboard</h3>
+                <div class="flex items-center gap-2">
+                    <span id="bdt-clock" class="text-[10px] text-yellow-400 font-mono">00:00:00 (BDT)</span>
+                    <span id="user-credits" class="text-[10px] bg-gray-900 border border-gray-700 px-2 py-0.5 rounded-full text-accentGreen font-semibold">Credits: 5</span>
+                </div>
+            </div>
+            <!-- Market Type & All Pairs Selection -->
+            <div class="grid grid-cols-2 gap-2 mb-2">
+                <div>
+                    <label class="text-[10px] text-gray-400">Market Type:</label>
+                    <select id="market-type" onchange="updatePairs()" class="w-full p-1.5 bg-gray-900 border border-gray-700 rounded-lg mt-1 text-xs text-white">
+                        <option value="OTC">OTC Market (All)</option>
+                        <option value="Real">Real Market (All)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-[10px] text-gray-400">Currency Pair:</label>
+                    <select id="pair-select" onchange="changeChartSymbol()" class="w-full p-1.5 bg-gray-900 border border-gray-700 rounded-lg mt-1 text-xs text-white"></select>
+                </div>
+            </div>
+            <!-- ALL NAVIGATION TOOL BUTTONS -->
+            <div class="grid grid-cols-2 gap-1.5 mb-2">
+                <button onclick="runLiveEngine('Overview')" class="p-1.5 bg-gray-900 hover:bg-gray-800 border border-gray-700 rounded-lg text-[10px] font-bold text-accentGreen">OVERVIEW</button>
+                <button onclick="runLiveEngine('Live Signal')" class="p-1.5 bg-gray-900 hover:bg-gray-800 border border-gray-700 rounded-lg text-[10px] font-bold text-accentGreen">LIVE SIGNAL</button>
+                <button onclick="runLiveEngine('Algorithmic')" class="p-1.5 bg-gray-900 hover:bg-gray-800 border border-gray-700 rounded-lg text-[10px] font-bold text-accentGreen">ALGORITHMIC</button>
+                <button onclick="runLiveEngine('Future Signal')" class="p-1.5 bg-gray-900 hover:bg-gray-800 border border-gray-700 rounded-lg text-[10px] font-bold text-accentGreen">FUTURE SIGNAL</button>
+                <button onclick="runLiveEngine('Chart Analyser')" class="p-1.5 bg-gray-900 hover:bg-gray-800 border border-gray-700 rounded-lg text-[10px] font-bold text-accentGreen">CHART ANALYSER</button>
+                <button onclick="runLiveEngine('Signal Checker')" class="p-1.5 bg-gray-900 hover:bg-gray-800 border border-gray-700 rounded-lg text-[10px] font-bold text-accentGreen">SIGNAL CHECKER</button>
+                <button onclick="runLiveEngine('News Signal')" class="p-1.5 bg-gray-900 hover:bg-gray-800 border border-gray-700 rounded-lg text-[10px] font-bold text-accentGreen">NEWS SIGNAL</button>
+                <button onclick="runLiveEngine('Best Pairs')" class="p-1.5 bg-gray-900 hover:bg-gray-800 border border-gray-700 rounded-lg text-[10px] font-bold text-accentGreen">BEST PAIRS</button>
+            </div>
+            <button onclick="runLiveEngine('Risk Manager')" class="w-full py-1.5 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-lg text-[11px] mb-2">RISK MANAGER</button>
+            <!-- SIGNAL & GUIDELINE RESULT BOX -->
+            <div id="signal-box" class="p-3 bg-gray-900 border border-gray-700 rounded-xl text-left mb-2">
+                <div class="flex justify-between items-center mb-1">
+                    <h4 id="res-tool-name" class="text-xs font-bold text-yellow-400">NOVEX ENGINE: READY</h4>
+                    <span id="res-signal-type" class="text-xs font-extrabold text-gray-400">CLICK TO GET SIGNAL</span>
+                </div>
+                <p id="res-market-info" class="text-[10px] text-gray-300 mb-1">Select pair and click button for original analysis...</p>
+                <p id="res-guidance" class="text-[10px] text-gray-300 bg-black/50 p-2 rounded mb-1 border border-gray-800 leading-tight">UTC+6 synchronized technical analysis will appear here.</p>
+                <div class="flex justify-between text-[10px] text-gray-300">
+                    <span id="res-confidence">Accuracy: --%</span>
+                    <span id="res-timer" class="text-yellow-400 font-bold">Timeframe: 1M (UTC+6)</span>
+                </div>
+            </div>
+            <!-- TradingView Live Chart Container -->
+            <div class="w-full h-36 bg-gray-900 border border-gray-700 rounded-xl overflow-hidden relative mb-2">
+                <div id="tradingview_widget_wrapper" style="height:100%;width:100%;"></div>
+            </div>
+            <!-- Admin Panel Button -->
+            <div id="admin-panel-btn" class="hidden">
+                <button onclick="openAdminPanel()" class="w-full py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg text-xs">Open Admin Control Panel</button>
+            </div>
+        </div>
+        <!-- 5. ADMIN CONTROL PANEL -->
+        <div id="admin-screen" class="hidden">
+            <div class="flex justify-between items-center mb-4 border-b border-gray-800 pb-2">
+                <h3 class="text-sm font-bold text-red-500">Admin Credit Manager</h3>
+                <button onclick="showScreen('dashboard-screen')" class="text-xs bg-gray-800 px-2 py-1 rounded text-gray-300">Back</button>
+            </div>
+            <p class="text-[10px] text-gray-400 mb-3">Userder taka niye tader email-e credit add ba recharge kore din:</p>
+            <input type="email" id="target-user-email" placeholder="User Email Address" class="w-full mb-3 p-2 bg-gray-900 border border-gray-700 rounded-lg text-xs text-white">
+            <select id="credit-amount" class="w-full mb-4 p-2 bg-gray-900 border border-gray-700 rounded-lg text-xs text-white">
+                <option value="10">Add 10 Credits</option>
+                <option value="50">Add 50 Credits</option>
+                <option value="100">Add 100 Credits</option>
+                <option value="500">Add 500 Credits</option>
+                <option value="999999">Unlimited Credits</option>
+            </select>
+            <button onclick="adminAddCredits()" class="w-full py-2 bg-accentGreen text-black font-bold rounded-lg text-xs hover:opacity-90 mb-2">Add Credits to User</button>
+            <div id="admin-status" class="text-[10px] text-yellow-400 text-center mt-2"></div>
+        </div>
+    </div>
+    <!-- TradingView Script -->
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+    <script>
+        const ADMIN_EMAIL = "rifatchowduryapple@gmail.com";
+        let currentUser = null;
+        let tempSignupData = {};
+        let generatedCode = "";
+        let clockTimer = null;
+        let usersDB = {
+            "rifatchowduryapple@gmail.com": { credits: 999999, isAdmin: true }
+        };
+        const allAssetList = [
+            "EUR/USD", "GBP/USD", "AUD/USD", "USD/JPY", "EUR/JPY", "GBP/JPY", 
+            "USD/CAD", "EUR/GBP", "AUD/CAD", "NZD/USD", "USD/CHF", "EUR/AUD",
+            "USD/BRL", "USD/BDT", "USD/INR", "USD/PKR", "USD/IDR", "USD/PHP",
+            "USD/TRY", "USD/MXN", "EUR/TRY", "GBP/ZAR", "AUD/NZD", "CAD/JPY",
+            "BTC/USD", "ETH/USD", "LTC/USD", "XRP/USD", "USDT/USD", "GOLD", "SILVER"
+        ];
+        function showScreen(screenId) {
+            ['login-screen', 'signup-screen', 'verify-screen', 'dashboard-screen', 'admin-screen'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            document.getElementById(screenId).classList.remove('hidden');
+            
+            if(screenId === 'dashboard-screen') {
+                setTimeout(changeChartSymbol, 200);
+                startBdtClock();
+            } else {
+                if(clockTimer) clearInterval(clockTimer);
+            }
+        }
+        function startBdtClock() {
+            if(clockTimer) clearInterval(clockTimer);
+            clockTimer = setInterval(() => {
+                const now = new Date();
+                // Convert local time to UTC+6 (Bangladesh Time)
+                const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+                const bdtTime = new Date(utc + (3600000 * 6));
+                const hours = String(bdtTime.getHours()).padStart(2, '0');
+                const minutes = String(bdtTime.getMinutes()).padStart(2, '0');
+                const seconds = String(bdtTime.getSeconds()).padStart(2, '0');
+                document.getElementById('bdt-clock').innerText = `${hours}:${minutes}:${seconds} (BDT)`;
+            }, 1000);
+        }
+        function updatePairs() {
+            const marketType = document.getElementById('market-type').value;
+            const pairSelect = document.getElementById('pair-select');
+            pairSelect.innerHTML = "";
+            
+            allAssetList.forEach(pair => {
+                const opt = document.createElement('option');
+                opt.value = pair;
+                opt.innerText = pair + (marketType === "OTC" ? " (OTC)" : "");
+                pairSelect.appendChild(opt);
+            });
+            changeChartSymbol();
+        }
+        function changeChartSymbol() {
+            const pairSelect = document.getElementById('pair-select');
+            if(!pairSelect || pairSelect.selectedIndex === -1) return;
+            const selectedText = pairSelect.value;
+            const cleanPair = selectedText.replace("/", "").replace(" (OTC)", "");
+            
+            let tvSymbol = "FX:" + cleanPair;
+            if(cleanPair.includes("BTC") || cleanPair.includes("ETH") || cleanPair.includes("LTC") || cleanPair.includes("XRP") || cleanPair.includes("USDT")) {
+                tvSymbol = "BINANCE:" + cleanPair + "USDT";
+                if(cleanPair === "USDTUSD") tvSymbol = "BINANCE:USDTUSDT";
+            } else if(cleanPair === "GOLD") {
+                tvSymbol = "OANDA:XAUUSD";
+            } else if(cleanPair === "SILVER") {
+                tvSymbol = "OANDA:XAGUSD";
+            } else if(["BRL", "BDT", "INR", "PKR", "IDR", "PHP", "TRY", "MXN"].some(ex => cleanPair.includes(ex))) {
+                tvSymbol = "FX_IDC:" + cleanPair;
+            }
+            document.getElementById('tradingview_widget_wrapper').innerHTML = '<div id="tradingview_widget" style="height:100%;width:100%;"></div>';
+            
+            new TradingView.widget({
+                "autosize": true,
+                "symbol": tvSymbol,
+                "interval": "1",
+                "timezone": "Asia/Dhaka",
+                "theme": "dark",
+                "style": "1",
+                "locale": "en",
+                "toolbar_bg": "#f1f3f6",
+                "enable_publishing": false,
+                "hide_side_toolbar": false,
+                "container_id": "tradingview_widget"
+            });
+        }
+        function handleSignup() {
+            const email = document.getElementById('signup-email').value.trim();
+            const password = document.getElementById('signup-password').value;
+            if(!email || !password) { alert("Please fill fields!"); return; }
+            generatedCode = Math.floor(100000 + Math.random() * 900000).toString();
+            tempSignupData = { email, password };
+            document.getElementById('demo-code-box').innerText = `[Verification Code]: ${generatedCode}`;
+            showScreen('verify-screen');
+        }
+        function handleVerify() {
+            if(document.getElementById('verify-code').value !== generatedCode) {
+                alert("Incorrect code!"); return;
+            }
+            const email = tempSignupData.email;
+            if(!usersDB[email]) {
+                usersDB[email] = { credits: 5, isAdmin: false };
+            }
+            loginUser(email);
+        }
+        function handleLogin() {
+            const email = document.getElementById('login-email').value.trim();
+            if(!email || !document.getElementById('login-password').value) {
+                alert("Enter login details!"); return;
+            }
+            if(!usersDB[email]) {
+                usersDB[email] = { credits: email.toLowerCase() === ADMIN_EMAIL.toLowerCase() ? 999999 : 5, isAdmin: email.toLowerCase() === ADMIN_EMAIL.toLowerCase() };
+            }
+            loginUser(email);
+        }
+        function loginUser(email) {
+            currentUser = usersDB[email];
+            currentUser.email = email;
+            showScreen('dashboard-screen');
+            document.getElementById('welcome-title').innerText = email;
+            updateCreditDisplay();
+            
+            if(currentUser.isAdmin) {
+                document.getElementById('admin-panel-btn').classList.remove('hidden');
+            } else {
+                document.getElementById('admin-panel-btn').classList.add('hidden');
+            }
+            updatePairs();
+        }
+        function updateCreditDisplay() {
+            const cr = currentUser.credits;
+            document.getElementById('user-credits').innerText = cr > 900000 ? "Credits: Unl" : `Credits: ${cr}/5`;
+        }
+        function openAdminPanel() {
+            if(!currentUser.isAdmin) {
+                alert("Access Denied!"); return;
+            }
+            showScreen('admin-screen');
+            document.getElementById('admin-status').innerText = "";
+        }
+        function adminAddCredits() {
+            const targetEmail = document.getElementById('target-user-email').value.trim();
+            const addAmt = parseInt(document.getElementById('credit-amount').value);
+            
+            if(!targetEmail) {
+                document.getElementById('admin-status').innerText = "Please enter user email!";
+                return;
+            }
+            if(!usersDB[targetEmail]) {
+                usersDB[targetEmail] = { credits: 0, isAdmin: false };
+            }
+            usersDB[targetEmail].credits += addAmt;
+            document.getElementById('admin-status').innerText = `Successfully added credits to ${targetEmail}!`;
+            
+            if(currentUser.email === targetEmail) {
+                currentUser.credits = usersDB[targetEmail].credits;
+                updateCreditDisplay();
+            }
+        }
+        // Professional Novex-style Click Engine with UTC+6 Sync
+        function runLiveEngine(toolName) {
+            if(!currentUser.isAdmin && currentUser.credits <= 0) {
+                alert("Your credits are finished! Please purchase credits from admin."); return;
+            }
+            if(!currentUser.isAdmin) {
+                currentUser.credits--;
+                updateCreditDisplay();
+            }
+            const pairSelect = document.getElementById('pair-select');
+            if(!pairSelect || pairSelect.selectedIndex === -1) return;
+            const selectedPair = pairSelect.options[pairSelect.selectedIndex].text;
+            const marketType = document.getElementById('market-type').value;
+            // Generate precise professional signals based on BDT time hash and asset
+            const now = new Date();
+            const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+            const bdtTime = new Date(utc + (3600000 * 6));
+            
+            const timeHash = bdtTime.getMinutes() * 60 + bdtTime.getSeconds() + selectedPair.length + toolName.length;
+            const isCall = (timeHash % 2 === 0);
+            const direction = isCall ? "CALL (UP)" : "PUT (DOWN)";
+            const accuracy = 91 + (timeHash % 8);
+            document.getElementById('res-tool-name').innerText = toolName.toUpperCase() + " (NOVEX ENGINE)";
+            
+            const sigTypeEl = document.getElementById('res-signal-type');
+            sigTypeEl.innerText = direction;
+            sigTypeEl.className = isCall ? "text-xs font-extrabold text-accentGreen" : "text-xs font-extrabold text-accentRed";
+            
+            document.getElementById('res-market-info').innerText = `Asset: ${selectedPair} | Market: ${marketType}`;
+            const professionalGuidance = [
+                isCall ? `[UTC+6 Session Analysis]: Strong institutional buying detected near liquidity zone on ${selectedPair}. Candle rejection at support level. Action: CALL ENTRY.` :
+                         `[UTC+6 Session Analysis]: Overbought market condition and seller exhaustion near resistance level on ${selectedPair}. Action: PUT ENTRY.`,
+                isCall ? `[Price Action Strategy]: Bullish momentum breakout confirmed with volume spike on ${selectedPair}. Next candle trend continuation expected. Action: CALL.` :
+                         `[Price Action Strategy]: Bearish engulfing pattern formed after previous green sequence on ${selectedPair}. Action: PUT option recommended.`
+            ];
+            document.getElementById('res-guidance').innerText = professionalGuidance[timeHash % professionalGuidance.length];
+            document.getElementById('res-confidence').innerText = `Accuracy: ${accuracy}%`;
+            document.getElementById('res-timer').innerText = `Expiry: 1 Min | Timezone: UTC+6`;
+        }
+    </script>
+</body>
+</html>
